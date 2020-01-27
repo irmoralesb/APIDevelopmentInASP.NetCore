@@ -25,6 +25,7 @@ namespace CourseLibrary.API.Controllers
         }
 
         [HttpGet()]
+        [HttpHead]//Similar to Get, but returns no Body (payload).
         //public IActionResult GetAuthors() 
         public ActionResult<AuthorDto> GetAuthors() // This has some advantages over IActionResult and is recommended to use when possible.
         {
