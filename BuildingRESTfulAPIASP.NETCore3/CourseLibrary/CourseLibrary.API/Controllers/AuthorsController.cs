@@ -24,14 +24,23 @@ namespace CourseLibrary.API.Controllers
         public IActionResult GetAuthors()
         {
             var authorsFromRepo = _courseLibraryRepository.GetAuthors();
-            return new JsonResult(authorsFromRepo);
+            return Ok(authorsFromRepo);
         }
 
         [HttpGet("{authorId:guid}")]
         public IActionResult GetAuthor(Guid authorId)
         {
+            // This way is not recomended for high concurrency scenarios, the resource may be deleted between the 2 db calls
+            //if (!_courseLibraryRepository.AuthorExists(authorId))
+            //{ return NotFound(); }
+
+            // This way, only one DB call
             var authorFromRepo = _courseLibraryRepository.GetAuthor(authorId: authorId);
-            return new JsonResult(authorFromRepo);
+
+            if (authorFromRepo == null)
+            { return NotFound(); }
+
+            return Ok(authorFromRepo);
         }
 
     }

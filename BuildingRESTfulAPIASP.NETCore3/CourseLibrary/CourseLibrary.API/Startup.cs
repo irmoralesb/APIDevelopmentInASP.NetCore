@@ -3,6 +3,7 @@ using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,7 +23,11 @@ namespace CourseLibrary.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-           services.AddControllers();
+           services.AddControllers( setupAction =>
+           {
+               setupAction.ReturnHttpNotAcceptable = true; //If true, if the accept header parameter is not supported will return error, If false will return json.
+               //setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter()); this is one way to add it, but recommended as channing method call
+           }).AddXmlDataContractSerializerFormatters();
              
             services.AddScoped<ICourseLibraryRepository, CourseLibraryRepository>();
 
