@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CourseLibrary.API.Helpers;
 using AutoMapper;
+using CourseLibrary.API.ResourceParameters;
 
 namespace CourseLibrary.API.Controllers
 {
@@ -27,9 +28,9 @@ namespace CourseLibrary.API.Controllers
         [HttpGet()]
         [HttpHead]//Similar to Get, but returns no Body (payload).
         //public IActionResult GetAuthors() 
-        public ActionResult<AuthorDto> GetAuthors() // This has some advantages over IActionResult and is recommended to use when possible.
+        public ActionResult<AuthorDto> GetAuthors([FromQuery] AuthorsResourceParameters authorsResourceParameters) // This has some advantages over IActionResult and is recommended to use when possible.
         {
-            var authorsFromRepo = _courseLibraryRepository.GetAuthors();
+            var authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParameters);
             var authors = _mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo);
             return Ok(authors);
         }
