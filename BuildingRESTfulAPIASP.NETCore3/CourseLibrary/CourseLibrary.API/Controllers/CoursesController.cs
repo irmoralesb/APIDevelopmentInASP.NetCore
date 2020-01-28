@@ -24,19 +24,19 @@ namespace CourseLibrary.API.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<CourseDTO>> GetCoursesForAuthor(Guid authorId)
+        public ActionResult<IEnumerable<CourseDto>> GetCoursesForAuthor(Guid authorId)
         {
-            if(!_courseLibraryRepository.AuthorExists(authorId))
+            if (!_courseLibraryRepository.AuthorExists(authorId))
             { return NotFound(); }
 
             var coursesForAuthorFromRepo = _courseLibraryRepository.GetCourses(authorId);
-            var courses = _mapper.Map<IEnumerable<CourseDTO>>(coursesForAuthorFromRepo);
+            var courses = _mapper.Map<IEnumerable<CourseDto>>(coursesForAuthorFromRepo);
 
             return Ok(courses);
         }
 
-        [HttpGet("{courseId}")]
-        public ActionResult<CourseDTO> GetCourseForAuthor(Guid authorId, Guid courseId)
+        [HttpGet("{courseId}", Name = "GetCourseForAuthor")]
+        public ActionResult<CourseDto> GetCourseForAuthor(Guid authorId, Guid courseId)
         {
             if (!_courseLibraryRepository.AuthorExists(authorId))
             { return NotFound(); }
@@ -46,10 +46,23 @@ namespace CourseLibrary.API.Controllers
             if (courseForAuthorFromRepo == null)
             { return NotFound(); }
 
-            var course = _mapper.Map<CourseDTO>(courseForAuthorFromRepo);
+            var course = _mapper.Map<CourseDto>(courseForAuthorFromRepo);
 
             return Ok(course);
         }
 
+        [HttpPost]
+        public ActionResult<CourseDto> CreateCourseForAuthor(Guid authorId, CourseForCreationDto course)
+        {
+            if (!_courseLibraryRepository.AuthorExists(authorId))
+            { return NotFound(); }
+
+            var courseEntity = _mapper.Map<Entities.Course>(course);
+            _courseLibraryRepository.AddCourse(authorId, courseEntity);
+            _courseLibraryRepository.Save();
+
+            var courseToReturn = _mapper.Map<Models.CourseDto>(courseEntity);
+            return CreatedAtRoute("GetCourseForAuthor", new { authorId = courseEntity.AuthorId, courseId = courseEntity.Id }, courseToReturn);
+        }
     }
 }
