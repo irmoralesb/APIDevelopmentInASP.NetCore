@@ -4,6 +4,7 @@ using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,7 +30,26 @@ namespace CourseLibrary.API
            {
                setupAction.ReturnHttpNotAcceptable = true; //If true, if the accept header parameter is not supported will return error, If false will return json.
                //setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter()); this is one way to add it, but recommended as channing method call
-           }).AddXmlDataContractSerializerFormatters();
+           }).AddXmlDataContractSerializerFormatters()
+           .ConfigureApiBehaviorOptions(setupAction => 
+           setupAction.InvalidModelStateResponseFactory = context =>
+           {
+               var problemDetails = new ValidationProblemDetails(context.ModelState)
+               {
+                   Type = "https://courselibrary.com/modelvalidationproblem",
+                   Title = "One or more model validation errors occurred.",
+                   Status = StatusCodes.Status422UnprocessableEntity,
+                   Detail = "See the errors property for details.",
+                   Instance = context.HttpContext.Request.Path
+               };
+
+               problemDetails.Extensions.Add("traceId", context.HttpContext.TraceIdentifier);
+
+               return new UnprocessableEntityObjectResult(problemDetails)
+               {
+                   ContentTypes = { "application/problem+json" }
+               };
+           });
 
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
