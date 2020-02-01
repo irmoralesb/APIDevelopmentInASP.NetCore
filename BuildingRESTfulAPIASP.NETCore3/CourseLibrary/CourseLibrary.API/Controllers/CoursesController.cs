@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using CourseLibrary.API.Models;
 using CourseLibrary.API.Services;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CourseLibrary.API.Controllers
@@ -81,7 +82,7 @@ namespace CourseLibrary.API.Controllers
                 _courseLibraryRepository.AddCourse(authorId, courseToAdd);
                 _courseLibraryRepository.Save();
                 var courseToReturn = _mapper.Map<CourseDto>(courseToAdd);
-                return CreatedAtRoute("GetCourseForAuthor", new { authorId = authorId, courseId = courseToReturn.Id }, courseToReturn);
+                return CreatedAtRoute("GetCourseForAuthor", new { authorId, courseId = courseToReturn.Id }, courseToReturn);
             }
 
             // Map the entity to a CourseForUpdateDto
@@ -94,6 +95,31 @@ namespace CourseLibrary.API.Controllers
 
             return NoContent();
 
+        }
+
+        [HttpPatch("{courseId}")]
+        public ActionResult PartiallyUpdateForAuthor(Guid authorId, Guid courseId, JsonPatchDocument<CourseForUpateDto> patchDocument)
+        {
+            if (!_courseLibraryRepository.AuthorExists(authorId))
+            { return NotFound(); }
+
+            var courseForAuthorFromRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
+
+            if (courseForAuthorFromRepo == null)
+            { return NotFound(); }
+
+            var courseToPatch = _mapper.Map<CourseForUpateDto>(courseForAuthorFromRepo);
+            
+            patchDocument.ApplyTo(courseToPatch, ModelState);
+
+            //Explicit Validation
+            if (TryValidateModel(courseToPatch))
+            { return ValidationProblem(ModelState); }
+
+            _mapper.Map(courseToPatch, courseForAuthorFromRepo);
+            _courseLibraryRepository.UpdateCourse(courseForAuthorFromRepo);
+            _courseLibraryRepository.Save();
+            return NoContent();
         }
 
     }

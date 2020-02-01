@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json.Serialization;
 using System;
 
 namespace CourseLibrary.API
@@ -26,11 +27,13 @@ namespace CourseLibrary.API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-           services.AddControllers( setupAction =>
+            services.AddControllers(setupAction =>
            {
                setupAction.ReturnHttpNotAcceptable = true; //If true, if the accept header parameter is not supported will return error, If false will return json.
                //setupAction.OutputFormatters.Add(new XmlDataContractSerializerOutputFormatter()); this is one way to add it, but recommended as channing method call
-           }).AddXmlDataContractSerializerFormatters()
+           }).AddNewtonsoftJson(setupAction =>
+             setupAction.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver()
+            ).AddXmlDataContractSerializerFormatters()
            .ConfigureApiBehaviorOptions(setupAction => 
            setupAction.InvalidModelStateResponseFactory = context =>
            {
